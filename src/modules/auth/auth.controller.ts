@@ -4,7 +4,6 @@ import { Users } from 'kysely-codegen';
 import type { Insertable, Selectable } from 'kysely';
 import { LoginUsecase } from './usecases/auth.login';
 import express from 'express';
-import { triggerAsyncId } from 'async_hooks';
 
 @Controller('auth')
 export class AuthController {
