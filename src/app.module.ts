@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { PostgresDialect } from 'kysely';
 import { KyselyModule } from 'nestjs-kysely';
 import { Pool } from 'pg';
+import { RedisModule } from './redis/redis.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -12,11 +14,13 @@ import { Pool } from 'pg';
           host: 'localhost',
           user: 'habrpguser',
           password: 'pgpwd4habr',
-          port: 5434,
+          port: 5432,
           max: 10,
         })
       }),
     }),
+    RedisModule,
+    AuthModule
   ],
   controllers: [],
   providers: [],
