@@ -4,6 +4,7 @@ import { KyselyModule } from 'nestjs-kysely';
 import { Pool } from 'pg';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ResourcesModule } from './modules/resources/resources.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { AuthModule } from './modules/auth/auth.module';
       }),
     }),
     RedisModule,
-    AuthModule
+    AuthModule,
+    ResourcesModule
   ],
   controllers: [],
   providers: [],

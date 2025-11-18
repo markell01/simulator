@@ -1,9 +1,8 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { Insertable, Kysely, Selectable } from "kysely";
-import { DB, RuntimeEnumDeclarationNode, Users } from "kysely-codegen";
+import { Kysely, Selectable } from "kysely";
+import { DB, Users } from "kysely-codegen";
 import { InjectKysely } from "nestjs-kysely";
 import * as bcrypt from "bcrypt";
-import { randomUUID } from "crypto";
 import Redis from "ioredis";
 
 @Injectable()

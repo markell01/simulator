@@ -11,10 +11,32 @@ export class RegistrationUsecase {
     async execute(user: Insertable<Users>) {
         const hash = await bcrypt.hash(user.password_hash, 10);
         user.password_hash = hash
-        return await this.db
+        const player = await this.db
             .insertInto('users')
             .values(user)
             .returningAll()
             .executeTakeFirstOrThrow();
+
+        await this.getAxe(player.id)
+
+        return player;
+    }
+
+    private async getAxe(userId: string) {
+        const toolId = await this.db
+            .selectFrom('tools')
+            .select('id')
+            .where('name', '=', 'Axe')
+            .executeTakeFirst();
+
+        if (toolId) {
+            return await this.db
+                .insertInto('user_tools')
+                .values({
+                    user_id: userId,
+                    tool_id: toolId.id
+                })
+                .execute();
+        }
     }
 }
