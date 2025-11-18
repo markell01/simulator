@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Insertable, Kysely, Selectable } from 'kysely';
-import { DB, MiningSessions, ResourceTypes } from 'kysely-codegen';
+import { Insertable, Kysely } from 'kysely';
+import { DB, ResourceTypes } from 'kysely-codegen';
 import { InjectKysely } from 'nestjs-kysely';
-import { emitWarning } from 'process';
-import { min } from 'rxjs';
 
 @Injectable()
 export class ResourcesService {
