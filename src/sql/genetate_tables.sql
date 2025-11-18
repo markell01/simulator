@@ -62,20 +62,21 @@ CREATE TABLE user_tools (
 CREATE UNIQUE INDEX idx_user_tools_unique
     ON user_tools (user_id, tool_id);
 
-CREATE TABLE inventory (
+CREATE TABLE user_inventory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
-    user_id UUID NOT NULL,             -- владелец
+    user_id UUID NOT NULL,
+    resource_type_id UUID NOT NULL,
 
-    item_type VARCHAR(50) NOT NULL,    -- RESOURCE | ITEM | TOOL | CONSUMABLE
-    ref_id UUID NOT NULL,              -- ссылка на конкретный объект из другой таблицы
+    quantity BIGINT NOT NULL DEFAULT 0,
 
-    quantity BIGINT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
 
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (user_id, resource_type_id),
 
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (resource_type_id) REFERENCES resource_types(id) ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX idx_inventory_unique_item

@@ -2,10 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Insertable, Kysely, Selectable } from 'kysely';
 import { DB, MiningSessions, ResourceTypes } from 'kysely-codegen';
 import { InjectKysely } from 'nestjs-kysely';
+import { emitWarning } from 'process';
+import { min } from 'rxjs';
 
 @Injectable()
 export class ResourcesService {
-    constructor(@InjectKysely() private readonly db: Kysely<DB>) {}
+    constructor(@InjectKysely() private readonly db: Kysely<DB>) { }
 
     async createResource(resource: Insertable<ResourceTypes>) {
         return await this.db
@@ -23,13 +25,27 @@ export class ResourcesService {
             .executeTakeFirstOrThrow();
     }
 
-    async strartMineResource(userId: string, name: string) {
+    async startMineResource(userId: string, name: string) {
         const resource = await this.db
             .selectFrom('resource_types')
             .selectAll()
             .where('name', '=', name)
-            .executeTakeFirstOrThrow(); 
-        
+            .executeTakeFirstOrThrow();
+
+        let mine_tool: string;
+
+        switch (name) {
+            case ('Wood'):
+                mine_tool = 'Axe'
+                break;
+            case ('Iron'):
+                mine_tool = 'Pickaxe'
+                break;
+            case ('Wheat'):
+                mine_tool = 'Sickle'
+                break;
+        }
+
         const tool = await this.db
             .selectFrom('user_tools')
             .innerJoin('tools', 'tools.id', 'user_tools.tool_id')
@@ -44,16 +60,97 @@ export class ResourcesService {
             .where('user_tools.user_id', '=', userId)
             .where('tools.name', '=', 'Axe')
             .executeTakeFirstOrThrow();
-        
-        const actual_time = resource.base_time_ms * tool.efficiency_multiplier;
-        
+
+        const user_buff = await this.db
+            .selectFrom('user_buffs')
+            .selectAll()
+            .where('user_id', '=', userId)
+            .executeTakeFirstOrThrow();
+
+        const buff = await this.db
+            .selectFrom('buffs')
+            .selectAll()
+            .where('id', '=', user_buff.buff_id)
+            .executeTakeFirstOrThrow();
+
+        const actual_time = resource.base_time_ms * tool.efficiency_multiplier * buff.speed_multiplier;
+
         const now = new Date();
         const finish_time = new Date(now.getTime() + actual_time);
 
-        const mining_sessions = this.db
+        const mining_sessions = await this.db
             .insertInto('mining_sessions')
             .values({
-
+                user_id: userId,
+                resource_type_id: resource.id,
+                start_time: now,
+                finish_time,
+                tool_id: tool.id
             })
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        return mining_sessions;
+    }
+
+    async finishMineResource(sessionId: string) {
+        const mining_sessions = await this.db
+            .selectFrom('mining_sessions')
+            .selectAll()
+            .where('mining_sessions.id', '=', sessionId)
+            .executeTakeFirstOrThrow();
+
+        const { base_yield } = await this.db
+            .selectFrom('resource_types')
+            .select('base_yield')
+            .where('id', '=', mining_sessions.resource_type_id)
+            .executeTakeFirstOrThrow();
+
+        const { buff_id } = await this.db
+            .selectFrom('user_buffs')
+            .select('user_buffs.buff_id')
+            .where('user_id', '=', mining_sessions.user_id)
+            .executeTakeFirstOrThrow();
+
+        const { yield_multiplier } = await this.db
+            .selectFrom('buffs')
+            .select('buffs.yield_multiplier')
+            .where('id', '=', buff_id)
+            .executeTakeFirstOrThrow();
+
+        const tool = await this.db
+            .selectFrom('tool_levels')
+            .select('yield_multiplier')
+            .where('tool_id', '=', mining_sessions.tool_id)
+            .executeTakeFirstOrThrow();
+
+        const now = new Date();
+
+        if (now < mining_sessions.finish_time) {
+            return {
+                warning: 'Resources havent been extract yet!'
+            }
+        }
+
+        const amount = base_yield * yield_multiplier * tool.yield_multiplier;
+
+        const record = await this.db
+            .insertInto('user_inventory')
+            .values({
+                user_id: mining_sessions.user_id,
+                resource_type_id: mining_sessions.resource_type_id,
+                quantity: amount,
+            })
+            .onConflict((oc) =>
+                oc.columns(['user_id', 'resource_type_id'])
+                    .doUpdateSet((eb) => ({
+                        quantity: eb('user_inventory.quantity', '+', amount),
+                        updated_at: new Date(),
+                    }))
+            )
+            .returningAll()
+            .executeTakeFirstOrThrow();
+        
+        return record;
     }
 }
