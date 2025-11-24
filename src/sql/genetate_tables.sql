@@ -1,4 +1,4 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) UNIQUE,
@@ -10,7 +10,7 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
-CREATE TABLE resource_types (
+CREATE TABLE IF NOT EXISTS resource_types (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     name VARCHAR(50) NOT NULL UNIQUE,         -- wood, iron, gold, etc.
@@ -21,7 +21,7 @@ CREATE TABLE resource_types (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE tools (
+CREATE TABLE IF NOT EXISTS tools (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     name VARCHAR(50) NOT NULL UNIQUE,
@@ -30,7 +30,7 @@ CREATE TABLE tools (
     created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
-CREATE TABLE tool_levels (
+CREATE TABLE IF NOT EXISTS tool_levels (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     tool_id UUID NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE tool_levels (
     UNIQUE (tool_id, level)
 );
 
-CREATE TABLE user_tools (
+CREATE TABLE IF NOT EXISTS user_tools (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     user_id UUID NOT NULL,
@@ -59,10 +59,10 @@ CREATE TABLE user_tools (
     FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX idx_user_tools_unique
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_tools_unique
     ON user_tools (user_id, tool_id);
 
-CREATE TABLE user_inventory (
+CREATE TABLE IF NOT EXISTS user_inventory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     user_id UUID NOT NULL,
@@ -79,10 +79,10 @@ CREATE TABLE user_inventory (
     FOREIGN KEY (resource_type_id) REFERENCES resource_types(id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX idx_inventory_unique_item
+CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_unique_item
     ON inventory (user_id, item_type, ref_id);
 
-CREATE TABLE mining_sessions (
+CREATE TABLE IF NOT EXISTS mining_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     user_id UUID NOT NULL,
@@ -95,7 +95,7 @@ CREATE TABLE mining_sessions (
     FOREIGN KEY (resource_type_id) REFERENCES resource_types(id) ON DELETE CASCADE
 );
 
-CREATE TABLE buffs (
+CREATE TABLE IF NOT EXISTS buffs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -106,7 +106,7 @@ CREATE TABLE buffs (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE user_buffs (
+CREATE TABLE IF NOT EXISTS user_buffs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     user_id UUID NOT NULL,
@@ -116,3 +116,9 @@ CREATE TABLE user_buffs (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (buff_id) REFERENCES buffs(id) ON DELETE CASCADE
 );
+
+alter table mining_sessions
+add tool_iid uuid not null;
+
+alter table buffs
+alter column yield_multiplier set not null;
