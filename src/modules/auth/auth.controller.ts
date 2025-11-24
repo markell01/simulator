@@ -4,33 +4,33 @@ import { Users } from 'kysely-codegen';
 import type { Insertable, Selectable } from 'kysely';
 import { LoginUsecase } from './usecases/auth.login';
 import express from 'express';
+import { UserCreateDto, UserLogin } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
     constructor(
         private readonly registrationUsecase: RegistrationUsecase,
         private readonly loginUsecase: LoginUsecase
-    ) {}
+    ) { }
 
     @Post('registration')
-    async registration(@Body() user: Insertable<Users>) {
+    async registration(@Body() user: UserCreateDto) {
         try {
-            const result = await this.registrationUsecase.execute(user);
-            return result;
-        } catch(err) {
-            throw err;
+            return await this.registrationUsecase.execute(user);
+        } catch (err) {
+            return err;
         }
     }
 
     @Post('login')
     async login(
-        @Body() user: Selectable<Users>,
+        @Body() user: UserLogin,
         @Req() req: express.Request
     ) {
         try {
             const result = await this.loginUsecase.execute(user);
-            req.session.user = { 
-                username: user.username 
+            req.session.user = {
+                username: user.username
             };
             await new Promise<void>((resolve, reject) => {
                 req.session.save((err) => {
@@ -42,19 +42,23 @@ export class AuthController {
                 });
             });
             return { success: result };
-        } catch(err) {
-            throw err;
+        } catch (err) {
+            return err;
         }
     }
 
     @Get('logout')
     async logout(@Req() req: express.Request) {
-        await new Promise<void>((resolve, reject) => {
-            req.session.destroy((err) => {
-                if (err) reject(err);
-                else resolve();
+        try {
+            await new Promise<void>((resolve, reject) => {
+                req.session.destroy((err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
             });
-        });
-        return { success: true };
+            return { success: true };
+        } catch (err) {
+            return err;
+        }
     }
 }

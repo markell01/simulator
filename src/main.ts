@@ -3,9 +3,11 @@ import { AppModule } from './app.module';
 import session from 'express-session';
 import { createClient } from 'redis';
 import RedisStore from 'connect-redis';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe());
 
   const redisClient = createClient({
     url: 'redis://localhost:6379'
@@ -15,7 +17,7 @@ async function bootstrap() {
 
   const redisStore = new RedisStore({
     client: redisClient,
-    prefix: 'sess:' // опционально
+    prefix: 'sess:'
   });
 
   app.use(  

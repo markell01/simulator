@@ -2,15 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { Insertable, Kysely } from 'kysely';
 import { DB, ResourceTypes } from 'kysely-codegen';
 import { InjectKysely } from 'nestjs-kysely';
+import { ResourceDto } from './dto/resource.dto';
 
 @Injectable()
 export class ResourcesService {
     constructor(@InjectKysely() private readonly db: Kysely<DB>) { }
 
-    async createResource(resource: Insertable<ResourceTypes>) {
+    async createResource(resource: ResourceDto) {
         return await this.db
             .insertInto('resource_types')
-            .values(resource)
+            .values({ ...resource })
             .returningAll()
             .executeTakeFirstOrThrow();
     }
@@ -23,16 +24,16 @@ export class ResourcesService {
             .executeTakeFirstOrThrow();
     }
 
-    async startMineResource(userId: string, name: string) {
+    async startMineResource(userId: string, resource_name: string) {
         const resource = await this.db
             .selectFrom('resource_types')
             .selectAll()
-            .where('name', '=', name)
+            .where('name', '=', resource_name)
             .executeTakeFirstOrThrow();
 
         let mine_tool: string;
 
-        switch (name) {
+        switch (resource_name) {
             case ('Wood'):
                 mine_tool = 'Axe'
                 break;

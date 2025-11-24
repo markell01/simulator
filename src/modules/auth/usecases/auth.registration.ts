@@ -3,17 +3,20 @@ import { Insertable, Kysely } from "kysely";
 import { InjectKysely } from "nestjs-kysely";
 import { DB, Users } from "kysely-codegen";
 import * as bcrypt from "bcrypt";
+import { UserCreateDto } from "../dto/auth.dto";
 
 @Injectable()
 export class RegistrationUsecase {
     constructor(@InjectKysely() private readonly db: Kysely<DB>) {}
 
-    async execute(user: Insertable<Users>) {
-        const hash = await bcrypt.hash(user.password_hash, 10);
-        user.password_hash = hash
+    async execute(user: UserCreateDto) {
+        const hash = await bcrypt.hash(user.password, 10);
         const player = await this.db
             .insertInto('users')
-            .values(user)
+            .values({
+                username: user.username,
+                password_hash: hash
+            })
             .returningAll()
             .executeTakeFirstOrThrow();
 
@@ -27,16 +30,15 @@ export class RegistrationUsecase {
             .selectFrom('tools')
             .select('id')
             .where('name', '=', 'Axe')
-            .executeTakeFirst();
+            .executeTakeFirstOrThrow();
 
-        if (toolId) {
-            return await this.db
-                .insertInto('user_tools')
-                .values({
-                    user_id: userId,
-                    tool_id: toolId.id
-                })
-                .execute();
-        }
+        return await this.db
+            .insertInto('user_tools')
+            .values({
+                user_id: userId,
+                tool_id: toolId.id
+            })
+            .returningAll()
+            .execute();
     }
 }

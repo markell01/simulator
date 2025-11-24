@@ -40,3 +40,43 @@ INSERT INTO tool_levels (id, tool_id, level, speed_multiplier, yield_multiplier)
 ('30000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000003', 7, 0.77, 1.30),
 ('30000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000003', 8, 0.73, 1.35),
 ('30000000-0000-0000-0000-000000000009', '00000000-0000-0000-0000-000000000003', 9, 0.67, 1.40),
+
+INSERT INTO potions (id, name, speed_multiplier, yield_multiplier, duration_ms)
+VALUES
+    (
+        gen_random_uuid(),
+        'Swift Hands',
+        0.8,   -- добыча быстрее на 20%
+        1.0,
+        300000  -- 5 минут
+    ),
+    (
+        gen_random_uuid(),
+        'Miner Focus',
+        1.0,
+        1.3,    -- +30% yield
+        300000
+    ),
+    (
+        gen_random_uuid(),
+        'Efficiency Elixir',
+        0.85,   -- быстрее на 15%
+        1.2,    -- +20% yield
+        600000  -- 10 минут
+    ),
+    (
+        gen_random_uuid(),
+        'Overdrive Potion',
+        0.5,   -- добыча в 2 раза быстрее
+        1.5,   -- +50% yield
+        120000  -- 2 минуты
+    );
+
+INSERT INTO resource_types (id, name, base_time_ms, base_yield)
+VALUES
+    (gen_random_uuid(), 'Wood',       2000,  1),  -- 2 сек
+    (gen_random_uuid(), 'Stone',      4000,  1),  -- 4 сек
+    (gen_random_uuid(), 'IronOre',    8000,  1),  -- 8 сек
+    (gen_random_uuid(), 'CopperOre',  6000,  1),  -- 6 сек
+    (gen_random_uuid(), 'GoldOre',   15000, 1),   -- 15 сек
+    (gen_random_uuid(), 'Crystal',   30000, 1);   -- 30 сек
